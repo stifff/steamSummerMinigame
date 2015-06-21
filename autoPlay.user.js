@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.7
+// @version 0.0.8
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.7';
+	var SCRIPT_VERSION = '0.0.8';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -194,7 +194,7 @@ var BOSS_DISABLED_ABILITIES = [];
 	}
 
 	function firstRun() {
-		advLog("Starting /u/wchill's script (version " + SCRIPT_VERSION + ")", 1);
+		advLog("Starting script (version " + SCRIPT_VERSION + ")", 1);
 
 
 			// Wait for welcome panel then add more buttons for batch purchase
@@ -488,6 +488,88 @@ var BOSS_DISABLED_ABILITIES = [];
 		return 86400 - time;
 	}
 
+	function lineLogic() {
+		var level = getGameLevel();
+		var levelsUntilBoss = (control.rainingRounds - (level % control.rainingRounds)) % control.rainingRounds;
+		
+		if(levelsUntilBoss == 0) {
+			//boss!
+			useWormholeIfRelevant();
+			goToLaneWithoutBoss();
+			advLog("goToLaneWithoutBoss boss", 2);
+
+			if(isCurrentLaneClear()) {
+				useLikeNew();
+			}
+			else {
+				advLog("Wait for line clear", 3);
+				useNapalmIfRelevant();
+				useTacticalNukeIfRelevant();
+				useClusterBombIfRelevant();				
+			}
+		}
+		else {
+			
+			if(levelsUntilBoss > 20 && (level % 10 == 0)) {
+				//small boss
+				goToLaneWithoutBoss();
+				advLog("goToLaneWithoutBoss small boss " + levelsUntilBoss, 2);
+				
+				useWormholeIfRelevant();
+				if(isCurrentLaneClear()) {
+					useLikeNew(2500);
+				}
+				else {
+					advLog("Wait for line clear", 3);
+
+					useNapalmIfRelevant();
+					useTacticalNukeIfRelevant();
+					useClusterBombIfRelevant();
+				}	
+			}
+			else {
+				goToLaneWithAnyTarget();
+			}
+
+			useCooldownIfRelevant();
+			useMedicsIfRelevant();
+			useMoraleBoosterIfRelevant();
+			useMetalDetectorIfRelevant();
+			useMaxElementalDmgIfRelevant();
+			
+			useGoodLuckCharmIfRelevant();
+
+			tryUsingItem(ABILITIES.TREASURE);
+			tryUsingItem(ABILITIES.STEAL_HEALTH);
+			tryUsingItem(ABILITIES.REFLECT_DAMAGE);
+
+
+			if(levelsUntilBoss > 70) {
+				//useWormholeIfRelevant();
+			}
+
+			if(levelsUntilBoss > 8) {
+				useMoraleBoosterIfRelevant();
+				useMetalDetectorIfRelevant();
+				//useNapalmIfRelevant();
+				useCrippleMonsterIfRelevant();
+			}
+
+			if(levelsUntilBoss > 4) {
+				//useTacticalNukeIfRelevant();
+			}
+
+			if(levelsUntilBoss > 2) {
+				//useClusterBombIfRelevant();
+			}
+
+			useCrippleSpawnerIfRelevant();
+
+		}
+
+		useMedicsIfRelevant();
+	}
+
 	function MainLoop() {
 		if (!isAlreadyRunning) {
 			isAlreadyRunning = true;
@@ -514,60 +596,9 @@ var BOSS_DISABLED_ABILITIES = [];
 				likenewInterval = false;
 			}
 
+			lineLogic();
 			
-			
-			var levelsUntilBoss = (control.rainingRounds - (level % control.rainingRounds)) % control.rainingRounds;
-			if(levelsUntilBoss > 70) {
-				useWormholeIfRelevant();
-			}
 
-			if(levelsUntilBoss > 8) {
-				useMoraleBoosterIfRelevant();
-				useMetalDetectorIfRelevant();
-				useNapalmIfRelevant();
-				useCrippleMonsterIfRelevant();
-			}
-
-			if(levelsUntilBoss > 4) {
-				useTacticalNukeIfRelevant();
-			}
-
-			if(levelsUntilBoss > 2) {
-				useClusterBombIfRelevant();
-			}
-
-			useCrippleSpawnerIfRelevant();
-
-
-			if(levelsUntilBoss == 0) {
-				//boss!
-				useWormholeIfRelevant();
-				goToLaneWithoutBoss();
-
-				if(isCurrentLaneClear()) {
-					useLikeNew();
-				}
-				else {
-					advLog("Wait for line clear", 3);
-				}
-			}
-			else {
-				goToLaneWithAnyTarget();
-
-				useCooldownIfRelevant();
-				useMedicsIfRelevant();
-				useMoraleBoosterIfRelevant();
-				useMetalDetectorIfRelevant();
-				useMaxElementalDmgIfRelevant();
-				
-				useGoodLuckCharmIfRelevant();
-
-				tryUsingItem(ABILITIES.TREASURE);
-				tryUsingItem(ABILITIES.STEAL_HEALTH);
-				tryUsingItem(ABILITIES.REFLECT_DAMAGE);
-			}
-
-			useMedicsIfRelevant();
 
 
 			updatePlayersInGame();
@@ -1134,7 +1165,7 @@ var BOSS_DISABLED_ABILITIES = [];
 				laneCnt++;
 			}
 		}
-
+		advLog('getEnemyCountInLine ' + targetLane + " " + laneCnt, 5);
 		return laneCnt;
 	}
 
@@ -1342,7 +1373,7 @@ var BOSS_DISABLED_ABILITIES = [];
 
 		// check if Medics is purchased and cooled down
 		if (tryUsingAbility(ABILITIES.MEDICS, false, true)) {
-			advLog('Medics is purchased, cooled down. Trigger it.', 2);
+			//advLog('Medics is purchased, cooled down. Trigger it.', 2);
 		}
 
 		if (level > control.reflectDamageThreshold && tryUsingItem(ABILITIES.REFLECT_DAMAGE)) {
@@ -1370,7 +1401,7 @@ var BOSS_DISABLED_ABILITIES = [];
 
 		// check if Good Luck Charms is purchased and cooled down
 		if (tryUsingAbility(ABILITIES.GOOD_LUCK_CHARMS)) {
-			advLog('Good Luck Charms is purchased, cooled down, and needed. Trigger it.', 2);
+			//advLog('Good Luck Charms is purchased, cooled down, and needed. Trigger it.', 2);
 		}
 	}
 
@@ -1385,7 +1416,7 @@ var BOSS_DISABLED_ABILITIES = [];
 	// Use Moral Booster if doable
 	function useMoraleBoosterIfRelevant() {
 		// Moral Booster is purchased, cooled down, and needed. Trigger it.
-		advLog('Moral Booster is purchased, cooled down, and needed. Trigger it.', 2);
+		//advLog('Moral Booster is purchased, cooled down, and needed. Trigger it.', 2);
 		triggerAbility(ABILITIES.MORALE_BOOSTER);
 	}
 
@@ -1472,7 +1503,7 @@ var BOSS_DISABLED_ABILITIES = [];
 		}
 	}
 
-	function useLikeNew() {
+	function useLikeNew(timeout) {
 		var level = getGameLevel();
 		/*
 		if (level % control.rainingRounds !== 0 && !wormHoleConstantUse && !wormHoleConstantUseOverride) {
@@ -1480,13 +1511,13 @@ var BOSS_DISABLED_ABILITIES = [];
 		}
 		*/
 
-		if(level % 100) {
-			return;
-			if((new Date().getTime() - likenewLastUse) > 2500 ) {
+		if(typeof(timeout)!=='undefined') {
+			if((new Date().getTime() - likenewLastUse) > timeout ) {
 				advLog('Triggered LIKE_NEW.', 2);
 				triggerAbility(ABILITIES.LIKE_NEW);
 				likenewLastUse = new Date().getTime();
 			}
+
 			return;
 		}
 
