@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.9
+// @version 0.0.10
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.9';
+	var SCRIPT_VERSION = '0.0.10';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -516,11 +516,10 @@
 			
 			if(level % 10 == 0) {
 				//small boss
-				goToLaneWithoutBoss();
-				advLog("goToLaneWithoutBoss small boss " + levelsUntilBoss, 2);
-				
-				//useWormholeIfRelevant();
 				if(ourWormholesUsedOnLevel < (levelsUntilBoss / 2)) {
+					goToLaneWithoutBoss();
+					advLog("goToLaneWithoutBoss small boss " + levelsUntilBoss, 2);
+
 					if(true || wormholeUsingConfirmed) {
 						advLog("useSingleWormhole " + ourWormholesUsedOnLevel + " < " + (levelsUntilBoss / 2), 2);
 						useSingleWormhole();
@@ -528,18 +527,22 @@
 					else {
 						advLog("wait for WH confirm", 2);
 					}
-				}
 
-				if(isCurrentLaneClear()) {
-					useLikeNew(2500);
+					if(isCurrentLaneClear()) {
+						useLikeNew(2500);
+					}
+					else {
+						advLog("Wait for line clear", 3);
+
+						useNapalmIfRelevant();
+						useTacticalNukeIfRelevant();
+						useClusterBombIfRelevant();
+					}	
 				}
 				else {
-					advLog("Wait for line clear", 3);
+					goToLaneWithAnyTarget();
+				}
 
-					useNapalmIfRelevant();
-					useTacticalNukeIfRelevant();
-					useClusterBombIfRelevant();
-				}	
 			}
 			else {
 				goToLaneWithAnyTarget();
