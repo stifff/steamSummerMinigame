@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.6
+// @version 0.0.7
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.6';
+	var SCRIPT_VERSION = '0.0.7';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -534,7 +534,10 @@ var BOSS_DISABLED_ABILITIES = [];
 
 			if(levelsUntilBoss > 2) {
 				useClusterBombIfRelevant();
-			}			
+			}
+
+			useCrippleSpawnerIfRelevant();
+
 
 			if(levelsUntilBoss == 0) {
 				//boss!
@@ -556,6 +559,12 @@ var BOSS_DISABLED_ABILITIES = [];
 				useMoraleBoosterIfRelevant();
 				useMetalDetectorIfRelevant();
 				useMaxElementalDmgIfRelevant();
+				
+				useGoodLuckCharmIfRelevant();
+
+				tryUsingItem(ABILITIES.TREASURE);
+				tryUsingItem(ABILITIES.STEAL_HEALTH);
+				tryUsingItem(ABILITIES.REFLECT_DAMAGE);
 			}
 
 			useMedicsIfRelevant();
