@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.3
+// @version 0.0.4
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.3';
+	var SCRIPT_VERSION = '0.0.4';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -536,41 +536,22 @@ var BOSS_DISABLED_ABILITIES = [];
 				useClusterBombIfRelevant();
 			}			
 
-			if ((level % control.rainingRounds > 0) && (level % control.rainingRounds < 100 - control.rainingSafeRounds) && !wormHoleConstantUseOverride) {
-				if (level % control.rainingRounds === 0) {
-					goToRainingLane();
-				} else {
-					goToLaneWithBestTarget();
-				}
-				useCooldownIfRelevant();
-				useGoodLuckCharmIfRelevant();
-				useMedicsIfRelevant();
-
-				useCrippleSpawnerIfRelevant();
-				if ((level < control.speedThreshold || level % control.rainingRounds === 0) && level > control.useGoldThreshold) {
-					useGoldRainIfRelevant();
-				}
-				//	useCrippleMonsterIfRelevant(level);
-				useMaxElementalDmgIfRelevant();
+			if(levelsUntilBoss == 0) {
+				//boss!
+				useWormholeIfRelevant();
+				goToLaneWithoutBoss();
 			}
 			else {
-				if (level % control.rainingRounds === 0 || wormHoleConstantUseOverride) {
-					goToRainingLane();
-				} else {
-					goToLaneWithBestTarget();
-				}
+				goToLaneWithAnyTarget();
+
 				useCooldownIfRelevant();
 				useMedicsIfRelevant();
 				useMoraleBoosterIfRelevant();
 				useMetalDetectorIfRelevant();
 				useMaxElementalDmgIfRelevant();
-
-				if(levelsUntilBoss % 100 == 0) {
-					useWormholeIfRelevant();
-				}
-
-				useReviveIfRelevant(level);
 			}
+
+			useMedicsIfRelevant();
 
 			updatePlayersInGame();
 
@@ -1085,6 +1066,69 @@ var BOSS_DISABLED_ABILITIES = [];
 		if (s().m_nExpectedLane != targetLane) {
 			advLog('Switching to raining lane' + targetLane, 3);
 			s().TryChangeLane(targetLane);
+		}
+	}
+
+	function goToLaneWithAnyTarget() {
+		var lowLane = 0;
+
+		// gather all the enemies of the specified type.
+		for (i = 0; i < 3; i++) {
+			for (var j = 0; j < 4; j++) {
+				var enemy = s().GetEnemy(i, j);
+				if (enemy) {
+					lowLane = i;
+					changeLane(lowLane);	
+					return;
+				}
+			}
+		}
+	}
+
+	function goToLaneWithoutAnyTarget(exeptLine) {
+		var lowLane = 0;
+		var lowLaneCnt = 4;
+
+		// gather all the enemies of the specified type.
+		for (i = 0; i < 3; i++) {
+			if(i != exeptLine) {
+				var curLaneCnt = 0;
+
+				for (var j = 0; j < 4; j++) {
+					var enemy = s().GetEnemy(i, j);
+					if (enemy) {
+						curLaneCnt++;
+					}
+				}
+
+				if(curLaneCnt < lowLaneCnt) {
+					lowLaneCnt = curLaneCnt;
+					lowLane = i;
+				}
+			}
+		}
+		changeLane(lowLane);			
+	}
+
+	function changeLane(targetLane) {
+		if( s().m_rgPlayerData.current_lane != targetLane ) {
+			advLog('Moving player to lane ' + targetLane, 5);
+			s().TryChangeLane(targetLane);
+		}		
+	}
+
+	function goToLaneWithoutBoss() {
+		for (i = 0; i < 3; i++) {
+			var enemyData = s().GetEnemy(i, 0).m_data;
+
+			if(typeof enemyData !== "undefined"){
+				var enemyType = enemyData.type;
+				if(enemyType == ENEMY_TYPE.BOSS) {
+					advLog('In lane '+i+', there is a boss, avoiding', 4);
+					goToLaneWithoutAnyTarget(i);
+					return;
+				}
+			}
 		}
 	}
 
