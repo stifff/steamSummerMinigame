@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.2
+// @version 0.0.3
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.2';
+	var SCRIPT_VERSION = '0.0.3';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -516,8 +516,25 @@ var BOSS_DISABLED_ABILITIES = [];
 
 			useLikeNew();
 			
+			var levelsUntilBoss = (control.rainingRounds - (level % control.rainingRounds)) % control.rainingRounds;
+			if(levelsUntilBoss > 70) {
+				useWormholeIfRelevant();
+			}
 
-			var levelsUntilBoss = (control.rainingRounds - (level % control.rainingRounds));
+			if(levelsUntilBoss > 8) {
+				useMoraleBoosterIfRelevant();
+				useMetalDetectorIfRelevant();
+				useNapalmIfRelevant();
+				useCrippleMonsterIfRelevant();
+			}
+
+			if(levelsUntilBoss > 2) {
+				useTacticalNukeIfRelevant();
+			}
+
+			if(levelsUntilBoss >= 1) {
+				useClusterBombIfRelevant();
+			}			
 
 			if ((level % control.rainingRounds > 0) && (level % control.rainingRounds < 100 - control.rainingSafeRounds) && !wormHoleConstantUseOverride) {
 				if (level % control.rainingRounds === 0) {
@@ -528,15 +545,6 @@ var BOSS_DISABLED_ABILITIES = [];
 				useCooldownIfRelevant();
 				useGoodLuckCharmIfRelevant();
 				useMedicsIfRelevant();
-
-				if(levelsUntilBoss > 10) {
-					useMoraleBoosterIfRelevant();
-					useMetalDetectorIfRelevant();
-					useClusterBombIfRelevant();
-					useNapalmIfRelevant();
-					useTacticalNukeIfRelevant();
-					useCrippleMonsterIfRelevant();
-				}
 
 				useCrippleSpawnerIfRelevant();
 				if ((level < control.speedThreshold || level % control.rainingRounds === 0) && level > control.useGoldThreshold) {
