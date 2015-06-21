@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.5
+// @version 0.0.6
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.5';
+	var SCRIPT_VERSION = '0.0.6';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -514,7 +514,7 @@ var BOSS_DISABLED_ABILITIES = [];
 				likenewInterval = false;
 			}
 
-			useLikeNew();
+			
 			
 			var levelsUntilBoss = (control.rainingRounds - (level % control.rainingRounds)) % control.rainingRounds;
 			if(levelsUntilBoss > 70) {
@@ -528,11 +528,11 @@ var BOSS_DISABLED_ABILITIES = [];
 				useCrippleMonsterIfRelevant();
 			}
 
-			if(levelsUntilBoss > 2) {
+			if(levelsUntilBoss > 4) {
 				useTacticalNukeIfRelevant();
 			}
 
-			if(levelsUntilBoss >= 1) {
+			if(levelsUntilBoss > 2) {
 				useClusterBombIfRelevant();
 			}			
 
@@ -540,6 +540,13 @@ var BOSS_DISABLED_ABILITIES = [];
 				//boss!
 				useWormholeIfRelevant();
 				goToLaneWithoutBoss();
+
+				if(isCurrentLaneClear()) {
+					useLikeNew();
+				}
+				else {
+					advLog("Wait for line clear", 3);
+				}
 			}
 			else {
 				goToLaneWithAnyTarget();
@@ -552,6 +559,7 @@ var BOSS_DISABLED_ABILITIES = [];
 			}
 
 			useMedicsIfRelevant();
+
 
 			updatePlayersInGame();
 
@@ -1092,15 +1100,7 @@ var BOSS_DISABLED_ABILITIES = [];
 		// gather all the enemies of the specified type.
 		for (i = 0; i < 3; i++) {
 			if(i != exeptLine) {
-				var curLaneCnt = 0;
-
-				for (var j = 0; j < 4; j++) {
-					var enemy = s().GetEnemy(i, j);
-					if (enemy) {
-						curLaneCnt++;
-					}
-				}
-
+				var curLaneCnt = getEnemyCountInLine(i);
 				if(curLaneCnt < lowLaneCnt) {
 					lowLaneCnt = curLaneCnt;
 					lowLane = i;
@@ -1115,6 +1115,22 @@ var BOSS_DISABLED_ABILITIES = [];
 			advLog('Moving player to lane ' + targetLane, 5);
 			s().TryChangeLane(targetLane);
 		}		
+	}
+	
+	function getEnemyCountInLine(targetLane) { 
+		var laneCnt = 0;
+		for (var j = 0; j < 4; j++) {
+			var enemy = s().GetEnemy(targetLane, j);
+			if (enemy) {
+				laneCnt++;
+			}
+		}
+
+		return laneCnt;
+	}
+
+	function isCurrentLaneClear() {
+		return getEnemyCountInLine(s().m_rgPlayerData.current_lane) == 0;
 	}
 
 	function goToLaneWithoutBoss() {
