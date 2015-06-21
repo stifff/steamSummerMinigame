@@ -1,13 +1,13 @@
 // ==UserScript==
-// @name /u/wchill Monster Minigame Auto-script w/ anti-troll
+// @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 7.4.6
+// @version 0.0.1
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
-// @updateURL https://raw.githubusercontent.com/wchill/steamSummerMinigame/master/autoPlay.user.js
-// @downloadURL https://raw.githubusercontent.com/wchill/steamSummerMinigame/master/autoPlay.user.js
+// @updateURL https://raw.githubusercontent.com/stifff/steamSummerMinigame/master/autoPlay.user.js
+// @downloadURL https://raw.githubusercontent.com/stifff/steamSummerMinigame/master/autoPlay.user.js
 // ==/UserScript==
 
 // IMPORTANT: Update the @version property above to a higher number such as 1.1 and 1.2 when you update the script! Otherwise, Tamper / Greasemonkey users will not update automatically.
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '7.4.6';
+	var SCRIPT_VERSION = '0.0.1';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -148,7 +148,9 @@
 		LIKE_NEW: 27
 	};
 
-	var NUISANCE_ABILITIES = [
+var NUISANCE_ABILITIES = [];
+
+	var NUISANCE_ABILITIES_old = [
 		ABILITIES.TACTICAL_NUKE,
 		ABILITIES.CLUSTER_BOMB,
 		ABILITIES.NAPALM,
@@ -160,8 +162,9 @@
 		ABILITIES.REFLECT_DAMAGE,
 		ABILITIES.FEELING_LUCKY
 	];
+var BOSS_DISABLED_ABILITIES = [];
 
-	var BOSS_DISABLED_ABILITIES = [
+	var BOSS_DISABLED_ABILITIES_old = [
 		ABILITIES.MORALE_BOOSTER,
 		ABILITIES.GOOD_LUCK_CHARMS,
 		ABILITIES.TACTICAL_NUKE,
@@ -510,6 +513,11 @@
 				likenewInterval = false;
 			}
 
+			useLikeNew();
+			
+
+			var levelsUntilBoss = (control.rainingRounds - (level % control.rainingRounds));
+
 			if ((level % control.rainingRounds > 0) && (level % control.rainingRounds < 100 - control.rainingSafeRounds) && !wormHoleConstantUseOverride) {
 				if (level % control.rainingRounds === 0) {
 					goToRainingLane();
@@ -519,12 +527,16 @@
 				useCooldownIfRelevant();
 				useGoodLuckCharmIfRelevant();
 				useMedicsIfRelevant();
-				//	useMoraleBoosterIfRelevant();
-				//	useMetalDetectorIfRelevant();
-				//	useClusterBombIfRelevant();
-				//	useNapalmIfRelevant();
-				//	useTacticalNukeIfRelevant();
-				//	useCrippleMonsterIfRelevant();
+
+				if(levelsUntilBoss > 10) {
+					useMoraleBoosterIfRelevant();
+					useMetalDetectorIfRelevant();
+					useClusterBombIfRelevant();
+					useNapalmIfRelevant();
+					useTacticalNukeIfRelevant();
+					useCrippleMonsterIfRelevant();
+				}
+
 				useCrippleSpawnerIfRelevant();
 				if ((level < control.speedThreshold || level % control.rainingRounds === 0) && level > control.useGoldThreshold) {
 					useGoldRainIfRelevant();
@@ -544,8 +556,10 @@
 				useMetalDetectorIfRelevant();
 				useMaxElementalDmgIfRelevant();
 
-				useLikeNew();
-				useWormholeIfRelevant();
+				if(levelsUntilBoss % 100 == 0) {
+					useWormholeIfRelevant();
+				}
+
 				useReviveIfRelevant(level);
 			}
 
@@ -673,11 +687,11 @@
 									this.m_eleUpdateLogContainer[0].insertBefore(ele[0], this.m_eleUpdateLogContainer[0].firstChild);
 									advLog(rgEntry.actor_name + " used " + this.m_Game.m_rgTuningData.abilities[ rgEntry.ability ].name + " on level " + getGameLevel(), 1);
 									w.$J('.name', ele).attr( "style", "color: red; font-weight: bold;" );
-									w.$J.ajax({
+									w.$J.post({
 										type: 'POST',
 										url: 'http://steam.intense.io:8080/report',
 										crossDomain: true,
-										data: JSON.stringify({"name":rgEntry.actor_name, "steamid":rgEntry.actor, "round":getGameLevel(), "ability":rgEntry.ability, "time":rgEntry.time}),
+										data: {"name":rgEntry.actor_name, "steamid":rgEntry.actor, "round":getGameLevel(), "ability":rgEntry.ability, "time":rgEntry.time},
 										dataType: 'json',
 										success: function(responseData, textStatus, jqXHR) {
 											console.log("Reported " + rgEntry.actor_name + " at time " + rgEntry.time);
@@ -1283,23 +1297,11 @@
 	}
 
 	function useClusterBombIfRelevant() {
-		if (!canUseOffensiveAbility()) {
-			return;
-		}
-
-		// Check the time before using like new.
-		var level = getGameLevel();
-		if (level % control.rainingRounds === 0) {
-			return;
-		}
-
-		if (triggerAbility(ABILITIES.CLUSTER_BOMB)) {
-			// Max Elemental Damage is purchased, cooled down, and needed. Trigger it.
-			advLog('Cluster Bomb is purchased and cooled down, triggering it.', 2);
-		}
+		triggerAbility(ABILITIES.CLUSTER_BOMB)
 	}
 
 	function useNapalmIfRelevant() {
+		triggerAbility(ABILITIES.NAPALM)
 	}
 
 	// Use Moral Booster if doable
@@ -1310,24 +1312,16 @@
 	}
 
 	function useTacticalNukeIfRelevant() {
-		// Check if Tactical Nuke is purchased
-		if (!canUseOffensiveAbility()) {
-			return;
-		}
-
-		// Check the time before using like new.
-		var level = getGameLevel();
-		if (level % control.rainingRounds === 0) {
-			return;
-		}
-
-		if (triggerAbility(ABILITIES.TACTICAL_NUKE)) {
-			// Max Elemental Damage is purchased, cooled down, and needed. Trigger it.
-			advLog('Tactical Nuke is purchased and cooled down, triggering it.', 2);
-		}
+		triggerAbility(ABILITIES.TACTICAL_NUKE)
 	}
 
 	function useCrippleMonsterIfRelevant() {
+		if (!canUseItem(ABILITIES.CRIPPLE_MONSTER)) {
+			return;
+		}
+
+		triggerItem(ABILITIES.CRIPPLE_MONSTER);
+
 		return;
 	}
 
@@ -1384,9 +1378,12 @@
 	function useWormholeIfRelevant() {
 		// Check the time before using wormhole.
 		var level = getGameLevel();
+
+		/*
 		if (level % control.rainingRounds !== 0 && !wormHoleConstantUse && !wormHoleConstantUseOverride) {
 			return;
 		}
+		*/
 
 		if (!wormholeInterval) {
 			wormholeInterval = w.setInterval(function(){
@@ -1399,9 +1396,11 @@
 
 	function useLikeNew() {
 		var level = getGameLevel();
+		/*
 		if (level % control.rainingRounds !== 0 && !wormHoleConstantUse && !wormHoleConstantUseOverride) {
 			return;
 		}
+		*/
 		if (!likenewInterval) {
 			likenewInterval = w.setInterval(function(){
 				w.g_Minigame.m_CurrentScene.m_rgAbilityQueue.push({'ability': 27}); //like new
