@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.1
+// @version 0.0.2
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.1';
+	var SCRIPT_VERSION = '0.0.2';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -84,6 +84,7 @@
 	var predictLastWormholesUpdate = 0;
 	var wormholeInterval = false;
 	var likenewInterval = false;
+	var likenewLastUse = false;
 
 	var showedUpdateInfo = getPreferenceBoolean("showedUpdateInfo", false);
 
@@ -1401,6 +1402,16 @@ var BOSS_DISABLED_ABILITIES = [];
 			return;
 		}
 		*/
+
+		if(level % 100) {
+			if((new Date().getTime() - likenewLastUse) > 2500 ) {
+				advLog('Triggered LIKE_NEW.', 2);
+				triggerAbility(ABILITIES.LIKE_NEW);
+				likenewLastUse = new Date().getTime();
+			}
+			return;
+		}
+
 		if (!likenewInterval) {
 			likenewInterval = w.setInterval(function(){
 				w.g_Minigame.m_CurrentScene.m_rgAbilityQueue.push({'ability': 27}); //like new
