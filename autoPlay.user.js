@@ -2,7 +2,7 @@
 // @name /u/stiff Monster Minigame Auto-script test fork
 // @namespace https://github.com/wchill/steamSummerMinigame
 // @description A script that runs the Steam Monster Minigame for you.
-// @version 0.0.8
+// @version 0.0.9
 // @match *://steamcommunity.com/minigame/towerattack*
 // @match *://steamcommunity.com//minigame/towerattack*
 // @grant none
@@ -16,7 +16,7 @@
 	"use strict";
 
 	//Version displayed to client, update along with the @version above
-	var SCRIPT_VERSION = '0.0.8';
+	var SCRIPT_VERSION = '0.0.9';
 
 	// OPTIONS
 	var clickRate = 20;
@@ -149,7 +149,7 @@
 		LIKE_NEW: 27
 	};
 
-var NUISANCE_ABILITIES = [];
+	var NUISANCE_ABILITIES = [];
 
 	var NUISANCE_ABILITIES_old = [
 		ABILITIES.TACTICAL_NUKE,
@@ -163,7 +163,7 @@ var NUISANCE_ABILITIES = [];
 		ABILITIES.REFLECT_DAMAGE,
 		ABILITIES.FEELING_LUCKY
 	];
-var BOSS_DISABLED_ABILITIES = [];
+	var BOSS_DISABLED_ABILITIES = [];
 
 	var BOSS_DISABLED_ABILITIES_old = [
 		ABILITIES.MORALE_BOOSTER,
@@ -186,6 +186,10 @@ var BOSS_DISABLED_ABILITIES = [];
 		"MINIBOSS": 3,
 		"TREASURE": 4
 	};
+
+	var ourWormholesUsedOnLevel = 0;
+	var prevWormholeCnt = 0;
+	var wormholeUsingConfirmed = true;
 
 	disableParticles();
 
@@ -510,12 +514,22 @@ var BOSS_DISABLED_ABILITIES = [];
 		}
 		else {
 			
-			if(levelsUntilBoss > 20 && (level % 10 == 0)) {
+			if(level % 10 == 0) {
 				//small boss
 				goToLaneWithoutBoss();
 				advLog("goToLaneWithoutBoss small boss " + levelsUntilBoss, 2);
 				
-				useWormholeIfRelevant();
+				//useWormholeIfRelevant();
+				if(ourWormholesUsedOnLevel < (levelsUntilBoss / 2)) {
+					if(true || wormholeUsingConfirmed) {
+						advLog("useSingleWormhole " + ourWormholesUsedOnLevel + " < " + (levelsUntilBoss / 2), 2);
+						useSingleWormhole();
+					}
+					else {
+						advLog("wait for WH confirm", 2);
+					}
+				}
+
 				if(isCurrentLaneClear()) {
 					useLikeNew(2500);
 				}
@@ -602,10 +616,22 @@ var BOSS_DISABLED_ABILITIES = [];
 
 
 			updatePlayersInGame();
+			if(prevWormholeCnt != getItemCount(ABILITIES.WORMHOLE)) {
+				var whDiff = prevWormholeCnt - getItemCount(ABILITIES.WORMHOLE);
+				if(whDiff < 0) {
+					whDiff = 0;
+				}
+
+				ourWormholesUsedOnLevel += whDiff;
+				wormholeUsingConfirmed = true;
+				prevWormholeCnt = getItemCount(ABILITIES.WORMHOLE);
+			}
 
 			if (level !== lastLevel) {
 				lastLevel = level;
 				refreshPlayerData();
+				ourWormholesUsedOnLevel = 0;
+				wormholeUsingConfirmed = true;
 			}
 
 			// This belongs here so we can update the header during boss fights
@@ -1482,6 +1508,11 @@ var BOSS_DISABLED_ABILITIES = [];
 			// Max Elemental Damage is purchased, cooled down, and needed. Trigger it.
 			advLog('Max Elemental Damage is purchased and cooled down, triggering it.', 2);
 		}
+	}
+
+	function useSingleWormhole() {
+		tryUsingItem(ABILITIES.WORMHOLE);
+		wormholeUsingConfirmed = false;
 	}
 
 	function useWormholeIfRelevant() {
